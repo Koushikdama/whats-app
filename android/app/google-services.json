@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "963659368992",
+    "project_id": "whatsapp-backend-5dfe6",
+    "storage_bucket": "whatsapp-backend-5dfe6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:963659368992:android:eec87b6e3ed71219c04a45",
+        "android_client_info": {
+          "package_name": "com.example.chatting"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALINr6tHti7waAcynru07Q1igTlnTLIlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:963659368992:android:704c9fba2c7abe87c04a45",
+        "android_client_info": {
+          "package_name": "com.example.chatting_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALINr6tHti7waAcynru07Q1igTlnTLIlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
