@@ -260,7 +260,7 @@ class AuthRepository {
 
       // Check if the document exists
       if (userDoc.exists) {
-        print("id executer");
+        // print("id executer");
         // Retrieve a specific attribute value from the document
         Map<String, dynamic> userData = userDoc.data() as Map<String,
             dynamic>; // Replace 'password' with the actual attribute name
@@ -268,11 +268,11 @@ class AuthRepository {
         return userData['lockSettings']['password'] ==
             password; // Return true if they match
       } else {
-        print("User document does not exist.");
+        // print("User document does not exist.");
         return false;
       }
     } catch (e) {
-      print("Error retrieving password: $e");
+      // print("Error retrieving password: $e");
       return false; // Return false in case of an error
     }
   }
@@ -323,7 +323,8 @@ class AuthRepository {
     });
   }
 
-  Future<UserProfile?> fetchProfileDetails(String receiverId) async {
+  Future<UserProfile?> fetchProfileDetails(
+      BuildContext context, String receiverId) async {
     print("Repo receiver_id: $receiverId");
 
     try {
@@ -344,29 +345,34 @@ class AuthRepository {
         print("User Name: ${userData['firstName']}");
         print("User Email: ${userData['phoneNumber']}");
         print("users in list chart :${(userData["lockSettings"]['users'])}");
-        List<Contact> contacts =
-            await FlutterContacts.getContacts(withProperties: true);
-        print(
-            "contacts list${containsPhoneNumber(contacts, userData["phoneNumber"])}");
-        UserProfile profileDetails = UserProfile(
-          isactivatePrivate: userData['isactivatePrivate'] ?? false,
-          firstName: userData['firstName'] ?? "Unknown",
-          describes: Description.fromMap(userData['describes']),
-          phoneNumber: userData['phoneNumber'] ?? '',
-          profile: userData['profile'] ?? '',
-          bgImage: userData['bgImage'] ?? '', // Ensure new fields are handled
-          groupId: List<String>.from(userData['groupId'] ?? []),
-          inOnline: userData['inOnline'] ?? false,
-          uid: userData['uid'] ?? '',
-          lockSettings: LockSettings.fromMap(
-              userData['lockSettings'] ?? {}), // Handle lockSettings
-          nearbyCoordinates:
-              NearbyCoordinates.fromMap(userData['nearbyCoordinates'] ?? {}),
-          privateSettings:
-              PrivateSettings.fromMap(userData['privateSettings'] ?? {}),
-        );
-        print("userprofile ${profileDetails.bgImage}");
-        return profileDetails;
+
+        if (await FlutterContacts.requestPermission()) {
+          List<Contact> contacts =
+              await FlutterContacts.getContacts(withProperties: true);
+          print(
+              "contacts list${containsPhoneNumber(contacts, userData["phoneNumber"])}");
+          UserProfile profileDetails = UserProfile(
+            isactivatePrivate: userData['isactivatePrivate'] ?? false,
+            firstName: userData['firstName'] ?? "Unknown",
+            describes: Description.fromMap(userData['describes']),
+            phoneNumber: userData['phoneNumber'] ?? '',
+            profile: userData['profile'] ?? '',
+            bgImage: userData['bgImage'] ?? '', // Ensure new fields are handled
+            groupId: List<String>.from(userData['groupId'] ?? []),
+            inOnline: userData['inOnline'] ?? false,
+            uid: userData['uid'] ?? '',
+            lockSettings: LockSettings.fromMap(
+                userData['lockSettings'] ?? {}), // Handle lockSettings
+            nearbyCoordinates:
+                NearbyCoordinates.fromMap(userData['nearbyCoordinates'] ?? {}),
+            privateSettings:
+                PrivateSettings.fromMap(userData['privateSettings'] ?? {}),
+          );
+          print("userprofile ${profileDetails.bgImage}");
+          return profileDetails;
+        } else {
+          Navigator.pushNamed(context, MobileLayoutScreen.routeName);
+        }
         // Add other fields as necessary
       } else {
         print("No user found with the ID: $receiverId");

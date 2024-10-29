@@ -1,14 +1,16 @@
 import 'package:chatting_app/colors.dart';
+import 'package:chatting_app/features/chat/screens/widgets/display_image_text_gif.dart';
 import 'package:flutter/material.dart';
 
 class SenderMessageCard extends StatelessWidget {
-  const SenderMessageCard({
-    super.key,
-    required this.message,
-    required this.date,
-  });
+  const SenderMessageCard(
+      {super.key,
+      required this.message,
+      required this.date,
+      required this.type});
   final String message;
   final String date;
+  final String type;
 
   @override
   Widget build(BuildContext context) {
@@ -26,19 +28,22 @@ class SenderMessageCard extends StatelessWidget {
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.only(
-                  left: 10,
-                  right: 30,
-                  top: 5,
-                  bottom: 20,
-                ),
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-              ),
+                  padding: type == 'text'
+                      ? EdgeInsets.only(
+                          left: message.length > date.length
+                              ? 20
+                              : ((date.length).toDouble()) * 6,
+                          right: 30,
+                          top: 3,
+                          bottom: 18,
+                        )
+                      : const EdgeInsets.only(
+                          left: 2,
+                          top: 1,
+                          right: 2,
+                          bottom: 25,
+                        ),
+                  child: DisplayTextImageGIF(message: message, type: type)),
               Positioned(
                 bottom: 2,
                 right: 10,

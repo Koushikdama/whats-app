@@ -24,8 +24,9 @@ class _WhatsappProfilePageState extends ConsumerState<WhatsappProfilePage> {
       child: Scaffold(
         backgroundColor: Colors.black,
         body: FutureBuilder<UserProfile?>(
-          future:
-              ref.watch(authControllerProvider).getprofiledetails(widget.uid),
+          future: ref
+              .watch(authControllerProvider)
+              .getprofiledetails(context, widget.uid),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());

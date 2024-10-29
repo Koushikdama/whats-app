@@ -1,6 +1,6 @@
-import 'package:chatting_app/auth/select_contacts/controller/select_contact_controller.dart';
+import 'package:chatting_app/auth/select_contacts/Model/contact_users.dart';
+import 'package:chatting_app/auth/select_contacts/controller/select_Contact_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_contacts/contact.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SelectContactPage extends ConsumerWidget {
@@ -9,17 +9,16 @@ class SelectContactPage extends ConsumerWidget {
   const SelectContactPage({super.key});
 
   void selectcontact(
-      WidgetRef ref, Contact selectedcontact, BuildContext context) {
-    // print("function call");
+      WidgetRef ref, Contacts selectedcontact, BuildContext context) {
     ref
-        .read(selectContactControllerProvider)
+        .read(selectContactControllerProvidercontacts)
         .selectContact(selectedcontact, context);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final contactsAsyncValue = ref.watch(getContactsProvider);
-    //print(contactsAsyncValue);
+    // Get the Future directly from the provider
+    final contactsFuture = ref.watch(getContactsProvidercontacts.future);
 
     return Scaffold(
       appBar: AppBar(
@@ -27,62 +26,55 @@ class SelectContactPage extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(
-              Icons.search,
-            ),
+            icon: const Icon(Icons.search),
           ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(
-              Icons.more_vert,
-            ),
+            icon: const Icon(Icons.more_vert),
           ),
         ],
       ),
-      body: contactsAsyncValue.when(
-        data: (contacts) {
-          if (contacts.isEmpty) {
+      body: FutureBuilder<List<Contacts>>(
+        future: contactsFuture, // Set the Future here
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No contacts found'));
-          }
-          return ListView.builder(
-            itemCount: contacts.length,
-            itemBuilder: (context, index) {
-              final contact = contacts[index];
-              return InkWell(
-                onTap: () => selectcontact(ref, contact, context),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: ListTile(
-                    title: Text(
-                      contact.displayName,
-                      style: const TextStyle(fontSize: 18),
+          } else {
+            final contacts = snapshot.data!;
+            return ListView.builder(
+              itemCount: contacts.length,
+              itemBuilder: (context, index) {
+                final contact = contacts[index];
+                return InkWell(
+                  onTap: () => selectcontact(ref, contact, context),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: ListTile(
+                      title: Text(
+                        contact.name,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      leading: contact.profilepic == null
+                          ? null
+                          : CircleAvatar(
+                              backgroundImage: NetworkImage(contact.profilepic),
+                              radius: 30,
+                            ),
+                      subtitle: contact.phonenumber.isNotEmpty
+                          ? Text(contact.phonenumber)
+                          : null,
+                      onTap: () => selectcontact(ref, contact, context),
                     ),
-                    leading: contact.photo == null
-                        ? null
-                        : CircleAvatar(
-                            backgroundImage: MemoryImage(contact.photo!),
-                            radius: 30,
-                          ),
-                    subtitle: contact.phones.isNotEmpty
-                        ? Text(contact.phones[0].number)
-                        : null,
-                    onTap: () => {
-                      // print("contact${contact}"),
-                      selectcontact(ref, contact, context)
-                    }
-                    // final selectContactController =
-                    //     ref.read(selectContactControllerProvider);
-                    // selectContactController.selectContact(contact, context);
-
-                    ,
                   ),
-                ),
-              );
-            },
-          );
+                );
+              },
+            );
+          }
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, stack) => Center(child: Text('Error: $e')),
       ),
     );
   }

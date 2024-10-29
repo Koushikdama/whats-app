@@ -163,10 +163,9 @@ class ChatRepository {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Stream<List<ChatContact>> getChatContacts(bool lock) async* {
-    print("repo executeted $lock");
     // Listen to the stream of excluded contact IDs (groupIds)
     await for (var excludedContactIds in getUserState()) {
-      print("excludedContactIds==$excludedContactIds");
+      // print("excludedContactIds==$excludedContactIds");
       yield* firestore
           .collection("users")
           .doc(auth.currentUser!.uid)
@@ -180,7 +179,7 @@ class ChatRepository {
 
           // Exclude contacts who are in the excludedContactIds list
           if (!lock) {
-            print("if block execute means unlock users");
+            // print("if block execute means unlock users");
             if (!excludedContactIds.contains(chatContact.contactId)) {
               var userData = await firestore
                   .collection("users")
@@ -196,7 +195,7 @@ class ChatRepository {
               ));
             }
           } else {
-            print("else block execute means lock users");
+            // print("else block execute means lock users");
             if (excludedContactIds.contains(chatContact.contactId)) {
               var userData = await firestore
                   .collection("users")
@@ -213,7 +212,7 @@ class ChatRepository {
             }
           }
         }
-        print("contacts all +${contacts}");
+        // print("contacts all +${contacts}");
 
         return contacts; // Return the filtered contacts list
       });
@@ -309,12 +308,12 @@ class ChatRepository {
             previousGroupId = groupId;
           }
         } else {
-          print("User document does not exist.");
+          // print("User document does not exist.");
           yield []; // Yield an empty list if document doesn't exist
         }
       }
     } catch (e) {
-      print("Error retrieving user state: $e");
+      // print("Error retrieving user state: $e");
       yield []; // Yield an empty list in case of error
     }
   }

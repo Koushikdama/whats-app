@@ -1,33 +1,64 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chatting_app/Common/enums/message_enmu.dart';
+import 'package:chatting_app/features/chat/screens/widgets/video_display.dart';
 import 'package:flutter/material.dart';
 
-class DisplayImageTextGif extends StatelessWidget {
+class DisplayTextImageGIF extends StatelessWidget {
   final String message;
   final String type;
-
-  const DisplayImageTextGif({
-    super.key,
+  const DisplayTextImageGIF({
+    Key? key,
     required this.message,
     required this.type,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Check if it's a text message
-    if (type == 'text') {
-      return Text(
-        message,
-        style: const TextStyle(
-          fontSize: 16,
-        ),
-      );
-    }
-    // Check if it's an image or gif message
-    else if (type == 'image' || type == 'gif') {
-      // return Image.network(message);
-      return CachedNetworkImage(imageUrl: message);
-    }
-    // If none of the above, return an empty container (or handle other types if needed)
-    return const SizedBox.shrink();
+    bool isPlaying = false;
+    final AudioPlayer audioPlayer = AudioPlayer();
+
+    return type == "text"
+        ? Text(
+            message,
+            style: const TextStyle(
+              fontSize: 16,
+            ),
+          )
+        : type == "audio"
+            ? StatefulBuilder(builder: (context, setState) {
+                return IconButton(
+                  constraints: const BoxConstraints(
+                    minWidth: 100,
+                  ),
+                  onPressed: () async {
+                    if (isPlaying) {
+                      await audioPlayer.pause();
+                      setState(() {
+                        isPlaying = false;
+                      });
+                    } else {
+                      await audioPlayer.play(UrlSource(message));
+                      setState(() {
+                        isPlaying = true;
+                      });
+                    }
+                  },
+                  icon: Icon(
+                    isPlaying ? Icons.pause_circle : Icons.play_circle,
+                  ),
+                );
+              })
+            : type == "video"
+                ? VideoPlayerItem(
+                    videoUrl: message,
+                  )
+                : type == "gif"
+                    ? CachedNetworkImage(
+                        imageUrl: message,
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: message,
+                      );
   }
 }

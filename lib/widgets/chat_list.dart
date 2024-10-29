@@ -85,11 +85,12 @@ class _ChatListState extends ConsumerState<ChatList> {
                           );
                         }
                         return SenderMessageCard(
-                            message: message[
-                                'text'], //messages[index]['text'].toString(),
-                            date: formattedTime.toString()
-                            //messages[index]['time'].toString(),
-                            );
+                          message: message[
+                              'text'], //messages[index]['text'].toString(),
+                          date: formattedTime.toString(),
+                          type: message['type'],
+                          //messages[index]['time'].toString(),
+                        );
                       }
                       return null;
                     },

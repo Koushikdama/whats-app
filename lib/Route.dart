@@ -3,6 +3,7 @@ import 'package:chatting_app/User_info/Screen/private_Screen.dart';
 import 'package:chatting_app/User_info/Screen/user_details.dart';
 import 'package:chatting_app/auth/select_contacts/screens/select_contact_screen.dart';
 import 'package:chatting_app/features/chat/screens/mobile_chat_screen.dart';
+import 'package:chatting_app/screens/mobile_layout_screen.dart';
 
 import 'package:flutter/material.dart';
 
@@ -16,6 +17,8 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => const PrivateSetting());
     case SelectContactPage.routeName:
       return MaterialPageRoute(builder: (context) => SelectContactPage());
+    case MobileLayoutScreen.routeName:
+      return MaterialPageRoute(builder: (context) => MobileLayoutScreen());
     case MobileChatScreen.routeName:
       final arguments = settings.arguments as Map<String, dynamic>;
       final name = arguments['name'];

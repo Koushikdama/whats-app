@@ -46,7 +46,7 @@ class MyMessageCard extends StatelessWidget {
                           right: 2,
                           bottom: 25,
                         ),
-                  child: DisplayImageTextGif(message: message, type: type)),
+                  child: DisplayTextImageGIF(message: message, type: type)),
               Positioned(
                 bottom: 4,
                 right: 10,

@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MobileLayoutScreen extends ConsumerStatefulWidget {
   const MobileLayoutScreen({super.key});
+  static const String routeName = "/starting-page";
 
   @override
   ConsumerState<MobileLayoutScreen> createState() => _MobileLayoutScreenState();
