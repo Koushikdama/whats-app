@@ -1,3 +1,5 @@
+import 'package:chatting_app/Common/Providers/messsage_reply_provider.dart';
+import 'package:chatting_app/Common/enums/message_enmu.dart';
 import 'package:chatting_app/Common/utils/functions.dart';
 import 'package:chatting_app/features/chat/controller/chat_controller.dart';
 import 'package:chatting_app/features/chat/repository/chat_repository.dart';
@@ -8,7 +10,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
+import 'package:logger/logger.dart'; // For date formatting
 
 class ChatList extends ConsumerStatefulWidget {
   final String receiverId;
@@ -26,6 +29,28 @@ class _ChatListState extends ConsumerState<ChatList> {
     messagecontroller.dispose();
   }
 
+  void onMessageSwipe(
+    String message,
+    bool isMe,
+    MessageEnum messageEnum,
+  ) {
+    // print("function call");
+    ref.read(messageReplyProvider.notifier).update(
+          (state) => MessageReply(
+            message,
+            isMe,
+            messageEnum,
+          ),
+        );
+  }
+
+  MessageEnum messageEnumFromString(String value) {
+    return MessageEnum.values.firstWhere(
+        (e) => e.toString().split('.').last == value,
+        orElse: () => MessageEnum.text);
+  }
+
+  void testing() {}
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<Map<String, dynamic>>>(
@@ -76,19 +101,44 @@ class _ChatListState extends ConsumerState<ChatList> {
                               message['timeSent']));
 
                       if (!dayChat['isvanish']) {
+                        if (!message['isSeen'] &&
+                            widget.receiverId ==
+                                FirebaseAuth.instance.currentUser!.uid) {
+                          ref.watch(chatcontroller).setSeen(
+                              context, widget.receiverId, message['messageId']);
+                        }
                         if (isMe) {
                           return MyMessageCard(
                             message: message['text'],
                             date: formattedTime.toString(),
-                            type: message['type'],
+                            type: messageEnumFromString(message['type']),
+                            repliedMessageType: messageEnumFromString(
+                                message['repliedMessageType']),
+                            username: message['repliedTo'],
+                            repliedText: message['repliedMessage'],
+                            onLeftSwipe: () => onMessageSwipe(
+                              message['text'],
+                              true,
+                              message['type'],
+                            ),
+
                             //messages[0]['time'].toString(),
                           );
                         }
                         return SenderMessageCard(
-                          message: message[
-                              'text'], //messages[index]['text'].toString(),
+                          message: message['text'],
                           date: formattedTime.toString(),
-                          type: message['type'],
+                          type: messageEnumFromString(message['type']),
+                          repliedMessageType: messageEnumFromString(
+                              message['repliedMessageType']),
+                          username: message['repliedTo'],
+                          repliedText: message['repliedMessage'],
+                          onrightswip: () => onMessageSwipe(
+                            message['text'],
+                            false,
+                            message['type'],
+                          ),
+
                           //messages[index]['time'].toString(),
                         );
                       }

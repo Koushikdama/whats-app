@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:io';
 
+import 'package:chatting_app/Common/Providers/messsage_reply_provider.dart';
 import 'package:chatting_app/Common/Repository/commonFirebase.dart';
 import 'package:chatting_app/Common/enums/message_enmu.dart';
 import 'package:chatting_app/Common/utils/showSnack.dart';
@@ -12,6 +13,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
 
 final chatrepository = Provider((ref) => ChatRepository(
@@ -25,12 +27,12 @@ class ChatRepository {
     required this.auth,
   });
 
-  void SendTextMessage({
-    required BuildContext context,
-    required String text,
-    required String receiverUserId,
-    required UserProfile senderUser,
-  }) async {
+  void SendTextMessage(
+      {required BuildContext context,
+      required String text,
+      required String receiverUserId,
+      required UserProfile senderUser,
+      required MessageReply? messagereply}) async {
     //users->sender_user_id->receiver_user_id->messages->message_id->store messages
     try {
       var timeSent = DateTime.now();
@@ -45,12 +47,16 @@ class ChatRepository {
 
       ////////////////////////////////
       _savemessageSubcollection(
-          receiverId: receiverUserId,
-          text: text,
-          timeSent: timeSent,
-          messageType: MessageEnum.text,
-          messageId: messageid,
-          senderId: senderUser.uid);
+        receiverId: receiverUserId,
+        text: text,
+        timeSent: timeSent,
+        messageType: MessageEnum.text,
+        messageId: messageid,
+        senderId: senderUser.uid,
+        messagereply: messagereply,
+        receiverusername: receiverUserData.firstName,
+        senderusername: senderUser.firstName,
+      );
     } catch (e) {
       showSnackBar(context, e.toString());
     }
@@ -97,6 +103,9 @@ class ChatRepository {
     required DateTime timeSent,
     required MessageEnum messageType, // Assuming MessageEnum is defined
     required String messageId,
+    required MessageReply? messagereply,
+    required String senderusername,
+    required String receiverusername,
   }) async {
     final DateTime now = DateTime.now(); // Current timestamp
     final String dateId = DateFormat('yyyy_MM_dd')
@@ -121,14 +130,22 @@ class ChatRepository {
     try {
       // Create the new message object
       final message = MESSAGES(
-        senderId: senderId,
-        receiverId: receiverId,
-        text: text,
-        timeSent: timeSent,
-        type: messageType,
-        messageId: messageId,
-        isSeen: false,
-      );
+          senderId: senderId,
+          receiverId: receiverId,
+          text: text,
+          timeSent: timeSent,
+          type: messageType,
+          messageId: messageId,
+          isSeen: false,
+          repliedMessage: messagereply == null ? "" : messagereply.message,
+          repliedTo: messagereply == null
+              ? ""
+              : messagereply.isMe
+                  ? senderusername
+                  : receiverusername,
+          repliedMessageType: messagereply == null
+              ? MessageEnum.text
+              : messagereply.messageEnum);
 
       // Get the current day's document to check if it exists
       DocumentSnapshot dayChatDoc = await dayChatRef.get();
@@ -230,17 +247,27 @@ class ChatRepository {
         .collection("chats")
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => doc.data() ?? {}).toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data() ?? {};
+        // Return the document data, which should include 'messages' and any other relevant fields
+        return {
+          ...data,
+          // Ensure messages is a List; if it's not, default to an empty list
+          'messages': data['messages'] is List ? data['messages'] : [],
+        };
+      }).toList();
     });
   }
 
-  void sendfileMessages(
-      {required BuildContext context,
-      required File file,
-      required String receiveruserid,
-      required UserProfile senderuserdata,
-      required ProviderRef ref,
-      required MessageEnum type}) async {
+  void sendfileMessages({
+    required BuildContext context,
+    required File file,
+    required String receiveruserid,
+    required UserProfile senderuserdata,
+    required ProviderRef ref,
+    required MessageEnum type,
+    required MessageReply? messagereply,
+  }) async {
     var timesent = DateTime.now();
     var messageid = const Uuid().v1();
     String imageUrl = await ref
@@ -275,12 +302,16 @@ class ChatRepository {
       _saveDataToContactSubCollection(senderuserdata, receiveruserdata,
           contactmsg, timesent, receiveruserid);
       _savemessageSubcollection(
-          senderId: senderuserdata.uid,
-          receiverId: receiveruserid,
-          text: imageUrl,
-          timeSent: timesent,
-          messageType: type,
-          messageId: messageid);
+        senderId: senderuserdata.uid,
+        receiverId: receiveruserid,
+        text: imageUrl,
+        timeSent: timesent,
+        messageType: type,
+        messageId: messageid,
+        messagereply: messagereply,
+        receiverusername: receiveruserdata.firstName,
+        senderusername: senderuserdata.firstName,
+      );
     } catch (e) {
       showSnackBar(context, e.toString());
     }
@@ -319,6 +350,48 @@ class ChatRepository {
   }
 
 //////////////////////////////////////////////////////////////////////////////////
+  ///
+  Future<void> setSeen(
+      BuildContext context, String receiverId, String messageId) async {
+    // print("is setseen function");
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+      // Reference to the chats collection for the specific friend
+      final chatsCollection = FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUserId)
+          .collection('friends')
+          .doc(receiverId)
+          .collection('chats');
+
+      // Retrieve all documents in the chats collection (each document represents a date)
+      final snapshot = await chatsCollection.get();
+
+      // Iterate through each date document
+      for (var dateDoc in snapshot.docs) {
+        Map<String, dynamic> messages = dateDoc['messages']; // Change to Map
+        // print("messages ${messages}");
+        // Iterate through the map to find the messageId
+        for (var key in messages.keys) {
+          //logger.w("key @@@@@@@@@@@@@@@@@@@@@${key}");
+          if (messages[key]['messageId'] == messageId) {
+            // Update only the isSeen field of the specific message
+            await dateDoc.reference.update({
+              'messages.$key.isSeen': true, // Update isSeen field
+            });
+
+            // print('Message seen status updated successfully.');
+            return;
+          }
+        }
+      }
+
+      // print('Message with ID $messageId not found.');
+    } catch (e) {
+      // print('Error updating message seen status: $e');
+    }
+  }
 
 /////////////////////////
 }

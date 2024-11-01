@@ -58,7 +58,7 @@ class MyApp extends ConsumerWidget {
         onGenerateRoute: (settings) => generateRoute(settings),
         home: ref.watch(userDataAuthprovider).when(
             data: (user) {
-              print("user ${user}");
+              // print("user ${user}");
               if (user == null) {
                 return const LoginScreen();
               } else {
@@ -66,7 +66,7 @@ class MyApp extends ConsumerWidget {
               }
             },
             error: (err, trace) {
-              print("error ${err.toString()}");
+              // print("error ${err.toString()}");
               return ErrorScreen(
                 error: err.toString(),
               );

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 void showSnackBar(BuildContext context, String text) {
-  // print(text);
+  // print("showsnack ${text}");
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(text),
@@ -26,6 +26,19 @@ Future<File?> pickImageFromGallery(BuildContext context) async {
   return image;
 }
 
+Future<File?> pickVideoFromGallery(BuildContext context) async {
+  File? image;
+  try {
+    final PickedImage =
+        await ImagePicker().pickVideo(source: ImageSource.gallery);
+    if (PickedImage != null) {
+      image = File(PickedImage.path);
+    }
+  } catch (e) {
+    showSnackBar(context, e.toString());
+  }
+  return image;
+}
 // pickedGIF(BuildContext context) async {
 //   // VMk483Lr52LZYERr5SApBKUZdJzbMSWW
 //   GiphyGif? gif;

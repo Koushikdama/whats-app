@@ -4,10 +4,15 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final getContactsProvidercontacts = FutureProvider<List<Contacts>>((ref) {
+// final getContactsProvidercontacts = StreamProvider<List<Contacts>>((ref) {
+//   final selectContactRepository = ref.watch(selectContactsRepositoryProvider);
+
+//   return selectContactRepository.getContactsStream();
+// });
+final getContactsProvidercontactsstream = StreamProvider<List<Contacts>>((ref) {
   final selectContactRepository = ref.watch(selectContactsRepositoryProvider);
 
-  return selectContactRepository.getContacts();
+  return selectContactRepository.getContactsStream();
 });
 final selectContactControllerProvidercontacts = Provider((ref) {
   final selectContactRepository = ref.watch(selectContactsRepositoryProvider);
@@ -27,7 +32,11 @@ class SelectContactController {
   });
 
   void selectContact(Contacts selectedContact, BuildContext context) {
-    print('controller select contact');
+    // print('controller select contact');
     selectContactRepository.selectContact(selectedContact, context);
+  }
+
+  Stream<List<Contacts>> getcontactslist() {
+    return selectContactRepository.getContactsStream();
   }
 }

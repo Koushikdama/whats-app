@@ -1,5 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
+import 'dart:convert';
+
 import 'package:chatting_app/Common/enums/message_enmu.dart';
 
 class MESSAGES {
@@ -10,6 +12,9 @@ class MESSAGES {
   final DateTime timeSent;
   final String messageId;
   final bool isSeen;
+  final String repliedMessage;
+  final String repliedTo;
+  final MessageEnum repliedMessageType;
 
   MESSAGES({
     required this.senderId,
@@ -19,6 +24,9 @@ class MESSAGES {
     required this.timeSent,
     required this.messageId,
     required this.isSeen,
+    required this.repliedMessage,
+    required this.repliedTo,
+    required this.repliedMessageType,
   });
 
   Map<String, dynamic> toMap() {
@@ -30,6 +38,9 @@ class MESSAGES {
       'timeSent': timeSent.millisecondsSinceEpoch,
       'messageId': messageId,
       'isSeen': isSeen,
+      'repliedMessage': repliedMessage,
+      'repliedTo': repliedTo,
+      'repliedMessageType': repliedMessageType.type,
     };
   }
 
@@ -43,8 +54,16 @@ class MESSAGES {
           DateTime.fromMillisecondsSinceEpoch((map['timeSent'] ?? 0) as int),
       messageId: (map['messageId'] ?? '') as String,
       isSeen: (map['isSeen'] ?? false) as bool,
+      repliedMessage: (map['repliedMessage'] ?? '') as String,
+      repliedTo: (map['repliedTo'] ?? '') as String,
+      repliedMessageType: (map['repliedMessageType'] as String).toEnum(),
     );
   }
+
+  String toJson() => json.encode(toMap());
+
+  factory MESSAGES.fromJson(String source) =>
+      MESSAGES.fromMap(json.decode(source) as Map<String, dynamic>);
 }
 
 class day_chats {

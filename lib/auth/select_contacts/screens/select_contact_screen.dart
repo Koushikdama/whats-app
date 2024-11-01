@@ -18,11 +18,11 @@ class SelectContactPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Get the Future directly from the provider
-    final contactsFuture = ref.watch(getContactsProvidercontacts.future);
+    final contactsFuture = ref.watch(getContactsProvidercontactsstream.future);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Contact'),
+        title: const Text('Select  Contact'),
         actions: [
           IconButton(
             onPressed: () {},
@@ -34,8 +34,10 @@ class SelectContactPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: FutureBuilder<List<Contacts>>(
-        future: contactsFuture, // Set the Future here
+      body: StreamBuilder<List<Contacts>>(
+        stream: ref
+            .watch(selectContactControllerProvidercontacts)
+            .getcontactslist(), // Set the Future here
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -49,6 +51,7 @@ class SelectContactPage extends ConsumerWidget {
               itemCount: contacts.length,
               itemBuilder: (context, index) {
                 final contact = contacts[index];
+                print("${contact.uid}");
                 return InkWell(
                   onTap: () => selectcontact(ref, contact, context),
                   child: Padding(

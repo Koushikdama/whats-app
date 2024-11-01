@@ -80,7 +80,7 @@ class _MobileLayoutScreenState extends ConsumerState<MobileLayoutScreen>
           }
         } else {
           // Handle the case when the password is empty (user clicked cancel)
-          print("User canceled the operation or did not enter a password.");
+          // print("User canceled the operation or did not enter a password.");
         }
       });
     } else {
@@ -105,7 +105,7 @@ class _MobileLayoutScreenState extends ConsumerState<MobileLayoutScreen>
           title: InkWell(
             onDoubleTap: () => change(context),
             child: Text(
-              'WhatsApp',
+              'WhatsApp ',
               style: TextStyle(
                 fontSize: 20,
                 color: status

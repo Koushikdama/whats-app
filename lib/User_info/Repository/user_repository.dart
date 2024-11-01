@@ -323,64 +323,47 @@ class AuthRepository {
     });
   }
 
-  Future<UserProfile?> fetchProfileDetails(
-      BuildContext context, String receiverId) async {
-    print("Repo receiver_id: $receiverId");
-
-    try {
-      // Await the result of the Firestore document fetch
-      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(receiverId)
-          .get();
-
+  Stream<UserProfile?> fetchProfileDetails(
+      BuildContext context, String receiverId) {
+    return FirebaseFirestore.instance
+        .collection("users")
+        .doc(receiverId)
+        .snapshots()
+        .map((userSnapshot) {
       // Check if the document exists
       if (userSnapshot.exists) {
-        // Print the entire data
         print("User data: ${userSnapshot.data()}");
 
-        // If you want to print specific fields
-        var userData =
-            userSnapshot.data() as Map<String, dynamic>; // Cast to a Map
-        print("User Name: ${userData['firstName']}");
-        print("User Email: ${userData['phoneNumber']}");
-        print("users in list chart :${(userData["lockSettings"]['users'])}");
+        // Cast the document data to a Map
+        var userData = userSnapshot.data() as Map<String, dynamic>;
 
-        if (await FlutterContacts.requestPermission()) {
-          List<Contact> contacts =
-              await FlutterContacts.getContacts(withProperties: true);
-          print(
-              "contacts list${containsPhoneNumber(contacts, userData["phoneNumber"])}");
-          UserProfile profileDetails = UserProfile(
-            isactivatePrivate: userData['isactivatePrivate'] ?? false,
-            firstName: userData['firstName'] ?? "Unknown",
-            describes: Description.fromMap(userData['describes']),
-            phoneNumber: userData['phoneNumber'] ?? '',
-            profile: userData['profile'] ?? '',
-            bgImage: userData['bgImage'] ?? '', // Ensure new fields are handled
-            groupId: List<String>.from(userData['groupId'] ?? []),
-            inOnline: userData['inOnline'] ?? false,
-            uid: userData['uid'] ?? '',
-            lockSettings: LockSettings.fromMap(
-                userData['lockSettings'] ?? {}), // Handle lockSettings
-            nearbyCoordinates:
-                NearbyCoordinates.fromMap(userData['nearbyCoordinates'] ?? {}),
-            privateSettings:
-                PrivateSettings.fromMap(userData['privateSettings'] ?? {}),
-          );
-          print("userprofile ${profileDetails.bgImage}");
-          return profileDetails;
-        } else {
-          Navigator.pushNamed(context, MobileLayoutScreen.routeName);
-        }
-        // Add other fields as necessary
+        // Create and return a UserProfile instance
+        UserProfile profileDetails = UserProfile(
+          isactivatePrivate: userData['isactivatePrivate'] ?? false,
+          firstName: userData['firstName'] ?? "Unknown",
+          describes: Description.fromMap(userData['describes']),
+          phoneNumber: userData['phoneNumber'] ?? '',
+          profile: userData['profile'] ?? '',
+          bgImage: userData['bgImage'] ?? '',
+          groupId: List<String>.from(userData['groupId'] ?? []),
+          inOnline: userData['inOnline'] ?? false,
+          uid: userData['uid'] ?? '',
+          lockSettings: LockSettings.fromMap(userData['lockSettings'] ?? {}),
+          nearbyCoordinates:
+              NearbyCoordinates.fromMap(userData['nearbyCoordinates'] ?? {}),
+          privateSettings:
+              PrivateSettings.fromMap(userData['privateSettings'] ?? {}),
+        );
+
+        return profileDetails; // Return the UserProfile instance
       } else {
         print("No user found with the ID: $receiverId");
-        return null;
+        return null; // Return null if the user does not exist
       }
-    } catch (e) {
-      print("Error fetching user data: $e");
-    }
+    }).handleError((error) {
+      print("Error fetching user data: $error");
+      return null; // Return null on error
+    });
   }
 
   Map<String, dynamic> containsPhoneNumber(

@@ -23,8 +23,8 @@ class _WhatsappProfilePageState extends ConsumerState<WhatsappProfilePage> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.black,
-        body: FutureBuilder<UserProfile?>(
-          future: ref
+        body: StreamBuilder<UserProfile?>(
+          stream: ref
               .watch(authControllerProvider)
               .getprofiledetails(context, widget.uid),
           builder: (context, snapshot) {
@@ -204,7 +204,7 @@ class _ProfileDetailsWithBodyState
   }
 
   void setLock(bool status) {
-    print("status: $status");
+    // print("status: $status");
     ref.read(authControllerProvider).setLock(
         context, status, widget.uid); // Use read instead of watch for actions
   }

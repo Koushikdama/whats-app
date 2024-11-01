@@ -1,21 +1,23 @@
 import 'dart:io';
-
+import 'package:chatting_app/Common/Providers/messsage_reply_provider.dart';
 import 'package:chatting_app/Common/enums/message_enmu.dart';
 import 'package:chatting_app/Common/utils/showSnack.dart';
+import 'package:chatting_app/colors.dart';
 import 'package:chatting_app/features/chat/controller/chat_controller.dart';
+import 'package:chatting_app/features/chat/screens/widgets/message_reply.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:flutter_sound/public/tau.dart';
+import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class BottomChatField extends ConsumerStatefulWidget {
-  final String receiveruserid;
+  final String recieverUserId;
+
   const BottomChatField({
-    required this.receiveruserid,
     super.key,
+    required this.recieverUserId,
   });
 
   @override
@@ -23,13 +25,13 @@ class BottomChatField extends ConsumerStatefulWidget {
 }
 
 class _BottomChatFieldState extends ConsumerState<BottomChatField> {
-  bool isshowemojicontainer = false;
-  bool isshowsendbutton = false;
-  FocusNode focusNode = FocusNode();
+  bool isShowSendButton = false;
+  final TextEditingController _messageController = TextEditingController();
   FlutterSoundRecorder? _soundRecorder;
-  final TextEditingController _messageControlller = TextEditingController();
-  bool isRecording = false;
   bool isRecorderInit = false;
+  bool isShowEmojiContainer = false;
+  bool isRecording = false;
+  FocusNode focusNode = FocusNode();
 
   @override
   void initState() {
@@ -48,11 +50,14 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
   }
 
   void sendTextMessage() async {
-    if (isshowsendbutton) {
+    if (isShowSendButton) {
       ref.read(chatcontroller).sendMessage(
-          context, _messageControlller.text.trim(), widget.receiveruserid);
+            context,
+            _messageController.text.trim(),
+            widget.recieverUserId,
+          );
       setState(() {
-        _messageControlller.text = '';
+        _messageController.text = '';
       });
     } else {
       var tempDir = await getTemporaryDirectory();
@@ -75,20 +80,49 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
     }
   }
 
+  void sendFileMessage(
+    File file,
+    MessageEnum messageEnum,
+  ) {
+    ref.read(chatcontroller).sendfileMessage(
+          context,
+          file,
+          widget.recieverUserId,
+          messageEnum,
+        );
+  }
+
+  void selectImage() async {
+    File? image = await pickImageFromGallery(context);
+    if (image != null) {
+      sendFileMessage(image, MessageEnum.image);
+    }
+  }
+
+  void selectVideo() async {
+    File? video = await pickVideoFromGallery(context);
+    if (video != null) {
+      sendFileMessage(video, MessageEnum.video);
+    }
+  }
+
   void hideEmojiContainer() {
     setState(() {
-      isshowemojicontainer = false;
+      isShowEmojiContainer = false;
     });
   }
 
   void showEmojiContainer() {
     setState(() {
-      isshowemojicontainer = true;
+      isShowEmojiContainer = true;
     });
   }
 
-  void toggleEmojikeyboard() {
-    if (isshowemojicontainer) {
+  void showKeyboard() => focusNode.requestFocus();
+  void hideKeyboard() => focusNode.unfocus();
+
+  void toggleEmojiKeyboardContainer() {
+    if (isShowEmojiContainer) {
       showKeyboard();
       hideEmojiContainer();
     } else {
@@ -97,63 +131,50 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
     }
   }
 
-  void showKeyboard() => focusNode.requestFocus();
-  void hideKeyboard() => focusNode.unfocus();
-
-  void sendFileMessage(
-    File file,
-    MessageEnum messageEnum,
-  ) {
-    ref
-        .read(chatcontroller)
-        .sendfileMessage(context, file, widget.receiveruserid, messageEnum);
-  }
-
-  void selectImage() async {
-    File? image = await pickImageFromGallery(context);
-    if (image != null) {}
-    sendFileMessage(image!, MessageEnum.image);
-  }
-
   @override
   void dispose() {
     super.dispose();
-    _messageControlller.dispose();
+    _messageController.dispose();
+    _soundRecorder!.closeRecorder();
     isRecorderInit = false;
   }
 
   @override
   Widget build(BuildContext context) {
+    final messageReply = ref.watch(messageReplyProvider);
+    final isShowMessageReply = messageReply != null;
+    // print("isShowMessageReply ${isShowMessageReply}");
     return Column(
       children: [
+        isShowMessageReply ? const MessageReplyPreview() : const SizedBox(),
         Row(
           children: [
             Expanded(
               child: TextFormField(
                 focusNode: focusNode,
-                controller: _messageControlller,
-                onChanged: (value) {
-                  if (value.isNotEmpty) {
+                controller: _messageController,
+                onChanged: (val) {
+                  if (val.isNotEmpty) {
                     setState(() {
-                      isshowsendbutton = true;
+                      isShowSendButton = true;
                     });
                   } else {
                     setState(() {
-                      isshowsendbutton = false;
+                      isShowSendButton = false;
                     });
                   }
                 },
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: const Color.fromRGBO(31, 44, 52, 1),
+                  fillColor: mobileChatBoxColor,
                   prefixIcon: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: SizedBox(
                       width: 100,
                       child: Row(
                         children: [
                           IconButton(
-                            onPressed: toggleEmojikeyboard,
+                            onPressed: toggleEmojiKeyboardContainer,
                             icon: const Icon(
                               Icons.emoji_emotions,
                               color: Colors.grey,
@@ -183,7 +204,7 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
                           ),
                         ),
                         IconButton(
-                          onPressed: () {},
+                          onPressed: selectVideo,
                           icon: const Icon(
                             Icons.attach_file,
                             color: Colors.grey,
@@ -205,14 +226,18 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(bottom: 8.0, left: 2, right: 2),
+              padding: const EdgeInsets.only(
+                bottom: 8,
+                right: 2,
+                left: 2,
+              ),
               child: CircleAvatar(
                 backgroundColor: const Color(0xFF128C7E),
                 radius: 25,
                 child: GestureDetector(
-                  onTap: () => sendTextMessage(),
+                  onTap: sendTextMessage,
                   child: Icon(
-                    isshowsendbutton
+                    isShowSendButton
                         ? Icons.send
                         : isRecording
                             ? Icons.close
@@ -221,21 +246,22 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
                   ),
                 ),
               ),
-            )
+            ),
           ],
         ),
-        isshowemojicontainer
+        isShowEmojiContainer
             ? SizedBox(
                 height: 310,
                 child: EmojiPicker(
                   onEmojiSelected: ((category, emoji) {
                     setState(() {
-                      _messageControlller.text =
-                          _messageControlller.text + emoji.emoji;
+                      _messageController.text =
+                          _messageController.text + emoji.emoji;
                     });
-                    if (!isshowsendbutton) {
+
+                    if (!isShowSendButton) {
                       setState(() {
-                        isshowsendbutton = true;
+                        isShowSendButton = true;
                       });
                     }
                   }),

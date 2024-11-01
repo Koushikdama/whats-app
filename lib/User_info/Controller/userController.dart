@@ -82,7 +82,7 @@ class Usercontroller {
     authRepository.lockStatus(context, islock, uid);
   }
 
-  Future<UserProfile?> getprofiledetails(BuildContext context, String uid) {
+  Stream<UserProfile?> getprofiledetails(BuildContext context, String uid) {
     // print("controller getprofiledetails call");
     return authRepository.fetchProfileDetails(context, uid);
   }

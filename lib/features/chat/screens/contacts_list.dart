@@ -46,7 +46,7 @@ class ContactsList extends ConsumerWidget {
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
               var chatContact = snapshot.data![index];
-              print('chatcontact$chatContact');
+              // print('chatcontact$chatContact');
               return Column(
                 children: [
                   InkWell(

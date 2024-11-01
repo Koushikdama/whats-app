@@ -8,10 +8,10 @@ class DisplayTextImageGIF extends StatelessWidget {
   final String message;
   final String type;
   const DisplayTextImageGIF({
-    Key? key,
+    super.key,
     required this.message,
     required this.type,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
